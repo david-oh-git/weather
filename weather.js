@@ -3,9 +3,64 @@
 var pLocation = document.getElementById("location");
 var pWeather = document.getElementById("weather");
 var longitude;
-var latitude ;
+var latitude;
 var city;
 var country;
+
+
+
+
+
+function createCORSrequest(method, url){
+  var Q = new XMLHttpRequest();
+
+  // check if reuest has with credential property chrome , firefox
+  if("withCredentials" in Q){
+    Q.open(method, url, true);
+  }else if (typeof XDomainRequest != "undefined") {
+    // internet explorer
+    Q = new XDomainRequest();
+    Q.open(method, url);
+  }else {
+    // CORS is not supported
+    Q = null;
+  }
+
+  return Q;
+}
+
+function getTitle(text) {
+  return text.match('<title>(.*)?</title>')[1];
+
+}
+
+function makeRequest(url){
+  var Q = createCORSrequest('GET', url);
+  if(!Q){
+    alert('CORS not supported');
+    return;
+  }
+
+  // response handlers
+  Q.onload = function(){
+    var text = Q.responseText;
+    var title = getTitle(text);
+    alert("response from CORS request to "+ url+'  '+title);
+  };
+
+  Q.onerror = function(){
+    alert('CORS request error');
+  };
+
+  Q.setRequestHeader('Access-Control-Allow-Origin','https://api.darksky.net');
+  Q.send();
+  getWeatherData(Q.responseText);
+}
+
+function getWeatherData(data){
+  var weather = data["summary"];
+  pWeather.innerHTML = weather;
+}
 
 function getLocation(){
   if (navigator.geolocation){
@@ -50,11 +105,11 @@ function getCityCoord(){
 function getWeather(){
 
 }
-var madaK = "a46a4c2f4ee2017cfdc9702f459b9c68";
 
 // to return darksky api url
 function darkSkyApiCallUrl(){
-  return "https://api.darksky.net/forecast/" + madaK +
+  var madaK = "a46a4c2f4ee2017cfdc9702f459b9c68";
+  return "https://crossorigin.me/https://api.darksky.net/forecast/" + madaK +
   "/"+ latitude+","+longitude;
 }
 
@@ -89,7 +144,7 @@ function(err, data) {
 
 
   getCityCoord();
-  get();
+  makeRequest(darkSkyApiCallUrl());
 
 });
 }, false);

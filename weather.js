@@ -52,7 +52,7 @@ function makeRequest(url){
     alert('CORS request error');
   };
 
-  Q.setRequestHeader('Access-Control-Allow-Origin','https://api.darksky.net');
+  Q.setRequestHeader('Access-Control-Allow-Origin','https://crossorigin.me');
   Q.send();
   getWeatherData(Q.responseText);
 }

@@ -6,6 +6,44 @@ var longitude;
 var latitude;
 var city;
 var country;
+// var data;
+var temperature;
+var currentweather;
+var weathericon;
+var isCelcious;
+var pTemp = document.getElementById("temperature");
+
+
+function fahrenheitAndCelsius(){
+  // coverts between celsius and fahrenheit and write to p tag
+  var temp = sessionStorage.getItem("temperature");
+  temp = Number(temp);
+  var insidetext;
+  if(isCelcious){
+    temp = temp * 9;
+    temp = temp / 5;
+    temp = temp + 32;
+    sessionStorage.setItem("temperature", temp);
+    temp = Math.round(temp);
+    isCelcious = false;
+    // temp = temp.toString();
+    var F = "<a href=\"javascript:fahrenheitAndCelsius()\">"+String.fromCharCode(8457)+"</a>";
+    insidetext = temp + " "+ F;
+  }else {
+    temp = temp - 32;
+    temp = temp * 5;
+    temp = temp / 9;
+    sessionStorage.setItem("temperature", temp);
+    temp = Math.round(temp);
+    // temp = temp.toString();
+    isCelcious = true;
+    var C = "<a href=\"javascript:fahrenheitAndCelsius()\">"+String.fromCharCode(8451)+"</a>";
+    insidetext = temp + " "+ C;
+  }
+  pTemp.innerHTML = insidetext;
+}
+
+
 
 
 
@@ -29,10 +67,18 @@ function createCORSrequest(method, url){
   return Q;
 }
 
-function getTitle(text) {
-  return text.match('<title>(.*)?</title>')[1];
+function assignToVariables(info){
+  // assign values to variables from api response
+  currentweather = info["currently"]["summary"];
+  weathericon = info["currently"]["icon"];
+  temperature = info["currently"]["temperature"];
+  sessionStorage.setItem("temperature", temperature);
 
+  temperature = Math.round(temperature);
+  isCelcious = false;
 }
+
+
 
 function makeRequest(url){
   var Q = createCORSrequest('GET', url);
@@ -43,18 +89,24 @@ function makeRequest(url){
 
   // response handlers
   Q.onload = function(){
-    var text = Q.responseText;
-    var title = getTitle(text);
-    alert("response from CORS request to "+ url+'  '+title);
+    var data = Q.responseText;
+    data = JSON.parse(data);
+    assignToVariables(data);
+    // alert("response from CORS request is "+ text);
+    sessionStorage.getItem("temperature");
+    sessionStorage.setItem("icon", weathericon);
+    var F = "<a href=\"javascript:fahrenheitAndCelsius(temperature)\">"+String.fromCharCode(8457)+"</a>";
+    pTemp.innerHTML = temperature + " "+ F;
+    pWeather.innerHTML = weathericon;
   };
 
   Q.onerror = function(){
     alert('CORS request error');
   };
 
-  Q.setRequestHeader('Access-Control-Allow-Origin','https://crossorigin.me');
+  // Q.setRequestHeader('Access-Control-Allow-Origin','https://crossorigin.me');
   Q.send();
-  getWeatherData(Q.responseText);
+  // getWeatherData(Q.responseText);
 }
 
 function getWeatherData(data){
@@ -71,8 +123,7 @@ function getLocation(){
 }
 
 function showPosition(position){
-  pLocation.innerHTML = "Latitude: "+ position.coords.latitude+
-  "<br>Longitude: "+ position.coords.longitude;
+  console.log("current postion was successful");
 }
 
 
@@ -98,13 +149,9 @@ var getJSON = function(url, callback) {
 
 function getCityCoord(){
   pLocation.innerHTML= city +","+" "+
-  country +"<br>Latitude: is "+ latitude +
-  "<br>Longitude: "+ longitude;
+  country;
 }
 
-function getWeather(){
-
-}
 
 // to return darksky api url
 function darkSkyApiCallUrl(){
@@ -113,21 +160,6 @@ function darkSkyApiCallUrl(){
   "/"+ latitude+","+longitude;
 }
 
-
-var get = function(apiUrl){
-  var url = darkSkyApiCallUrl();
-  getJSON(url ,
-function(err, data) {
-  if (err != null) {
-    alert('Something went wrong: ' + err);
-  } else {
-    console.log("good to go");
-  }
-  pWeather.innerHTML = "weather is "+ data["icon"];
-
-
-});
-}
 
 document.addEventListener('DOMContentLoaded', function(){
   getJSON('http://ip-api.com/json/?callback',
@@ -145,6 +177,8 @@ function(err, data) {
 
   getCityCoord();
   makeRequest(darkSkyApiCallUrl());
+
+
 
 });
 }, false);
